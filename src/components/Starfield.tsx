@@ -46,7 +46,7 @@ export const Starfield: React.FC = () => {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, w, h);
 
-      stars.forEach((star, i) => {
+      stars.forEach((star) => {
         const speedMultiplier = theme.starSpeed || 1;
         const currentSpeed = star.baseSpeed * speedMultiplier;
         

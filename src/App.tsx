@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { MusicProvider } from './context/MusicContext';
 import { Window } from './components/Window';
 import { Taskbar } from './components/Taskbar';
 import { ThemeWindow, SettingsWindow } from './components/ThemeSettings';
-import { MusicPlayer } from './components/MusicPlayer';
 import { Starfield } from './components/Starfield';
-import { Palette, Settings, Terminal, Cpu, Music } from 'lucide-react';
+import { Palette, Settings, Cpu } from 'lucide-react';
 
 const Desktop = () => {
   const { theme } = useTheme();
@@ -64,7 +63,6 @@ const Desktop = () => {
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           {openWindows.includes('theme') && (
             <Window 
-              id="theme" 
               title="Theme Settings" 
               icon={Palette} 
               onClose={() => toggleWindow('theme')}
@@ -76,7 +74,6 @@ const Desktop = () => {
 
           {openWindows.includes('settings') && (
             <Window 
-              id="settings" 
               title="System Settings" 
               icon={Settings} 
               onClose={() => toggleWindow('settings')}
@@ -88,7 +85,6 @@ const Desktop = () => {
 
           {openWindows.includes('hardware') && (
             <Window 
-              id="hardware" 
               title="Hardware_Monitor.sys" 
               icon={Cpu} 
               onClose={() => toggleWindow('hardware')}

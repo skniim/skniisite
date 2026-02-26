@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Square, Minus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -7,12 +7,11 @@ interface WindowProps {
   title: string;
   icon: any;
   children: React.ReactNode;
-  id: string;
   onClose?: () => void;
   defaultPosition?: { x: number, y: number };
 }
 
-export const Window: React.FC<WindowProps> = ({ title, icon: Icon, children, id, onClose, defaultPosition }) => {
+export const Window: React.FC<WindowProps> = ({ title, icon: Icon, children, onClose, defaultPosition }) => {
   const { theme } = useTheme();
 
   return (
