@@ -25,8 +25,13 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow }) => {
         onClick={() => { setShowStart(!showStart); setShowMusic(false); }}
         className={`h-9 px-4 win95-outset flex items-center gap-2 font-bold relative z-10 active:win95-inset transition-colors ${showStart ? 'win95-inset bg-gray-900' : 'bg-gray-800'}`}
       >
-        <Zap className={`w-4 h-4 ${showStart ? 'text-neon-yellow' : 'text-gray-400'}`} />
-        <span className={showStart ? 'text-neon-yellow' : 'text-gray-400'}>START</span>
+        <img 
+          src="/assets/icons/launcher-rune.svg" 
+          alt="Start" 
+          className={`w-4 h-4 ${showStart ? 'brightness-125' : 'brightness-50 grayscale'}`} 
+          style={{ filter: showStart ? `drop-shadow(0 0 5px ${theme.primary})` : '' }}
+        />
+        <span style={{ color: showStart ? theme.primary : '#9ca3af' }}>START</span>
       </button>
 
       <div className="h-8 border-r border-gray-700 mx-1 relative z-10" />
