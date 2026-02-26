@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 
 type Track = {
   id: number;
@@ -11,9 +11,15 @@ const tracks: Track[] = [
   { 
     id: 1, 
     title: 'SWEET_MARIO_LOVE.MP3', 
-    url: '/audio/Sweet Mario Love[SPC700].mp3',
-    artwork: '/assets/icons/sknii.svg' // Using your logo as placeholder artwork
+    url: '/audio/Sweet Mario Love/Sweet Mario Love[SPC700].mp3',
+    artwork: '/audio/Sweet Mario Love/Sweet Mario Love[SPC700].png'
   },
+  {
+    id: 2,
+    title: 'KINGS_FIELD_TOWER.MP3',
+    url: "/audio/King's Field The Ancient City OST - The Ancient City Level 3, Tower (Extended)/King's Field The Ancient City OST - The Ancient City Level 3, Tower (Extended).mp3",
+    artwork: "/audio/King's Field The Ancient City OST - The Ancient City Level 3, Tower (Extended)/King's Field The Ancient City OST - The Ancient City Level 3, Tower (Extended).png"
+  }
 ];
 
 type MusicContextType = {
@@ -39,38 +45,50 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Initialize audio once
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
     }
-    
     const audio = audioRef.current;
-    audio.src = tracks[trackIndex].url;
-    audio.load();
-
+    
     const updateProgress = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
-    const handleEnded = () => nextTrack();
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setTrackIndex((prev) => (prev + 1) % tracks.length);
+    };
 
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateDuration);
-    audio.addEventListener('ended', handleEnded);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
-
-    if (isPlaying) {
-      audio.play().catch(e => console.log("Playback interrupted", e));
-    }
+    audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateProgress);
       audio.removeEventListener('loadedmetadata', updateDuration);
-      audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
     };
+  }, []);
+
+  // Sync source and volume
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const currentUrl = tracks[trackIndex].url;
+    if (audio.src !== window.location.origin + currentUrl && !audio.src.endsWith(currentUrl)) {
+      audio.src = currentUrl;
+      audio.load();
+      // If it was already playing, continue playing the new track
+      if (isPlaying) {
+        audio.play().catch(() => setIsPlaying(false));
+      }
+    }
   }, [trackIndex]);
 
   useEffect(() => {
@@ -79,50 +97,79 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [volume]);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (audio.paused) {
-      audio.play().catch(e => console.error("Playback failed", e));
+      audio.play().catch((err) => {
+        console.error("Playback failed:", err);
+        setIsPlaying(false);
+      });
     } else {
       audio.pause();
     }
-  };
+  }, []);
 
-  const nextTrack = () => {
-    setTrackIndex((prev) => (prev + 1) % tracks.length);
-  };
+  const nextTrack = useCallback(() => {
+    setTrackIndex((prev) => {
+      const next = (prev + 1) % tracks.length;
+      if (next === prev && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+      return next;
+    });
+    setIsPlaying(true);
+  }, []);
 
-  const prevTrack = () => {
-    setTrackIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
-  };
+  const prevTrack = useCallback(() => {
+    setTrackIndex((prev) => {
+      const next = (prev - 1 + tracks.length) % tracks.length;
+      if (next === prev && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+      return next;
+    });
+    setIsPlaying(true);
+  }, []);
 
-  const seek = (time: number) => {
+  const seek = useCallback((time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time;
       setCurrentTime(time);
     }
-  };
+  }, []);
 
-  // Autoplay handler
+  const updateVolume = useCallback((v: number) => {
+    setVolume(v);
+  }, []);
+
+  // Autoplay on first interaction
   useEffect(() => {
     const handleFirstInteraction = () => {
-      if (!isPlaying && audioRef.current) {
-        audioRef.current.play()
-          .then(() => setIsPlaying(true))
-          .catch(e => console.log("Autoplay blocked", e));
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {
+          // Keep trying on next interaction if it fails? 
+          // No, usually one is enough or it will never work.
+        });
       }
-      document.removeEventListener('click', handleFirstInteraction);
     };
-    document.addEventListener('click', handleFirstInteraction);
-    return () => document.removeEventListener('click', handleFirstInteraction);
-  }, [isPlaying]);
+    
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    document.addEventListener('keydown', handleFirstInteraction, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []);
 
   return (
     <MusicContext.Provider value={{ 
       isPlaying, currentTrack: tracks[trackIndex], volume, currentTime, duration,
-      togglePlay, nextTrack, prevTrack, setVolume, seek 
+      togglePlay, nextTrack, prevTrack, setVolume: updateVolume, seek 
     }}>
       {children}
     </MusicContext.Provider>

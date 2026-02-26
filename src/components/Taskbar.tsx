@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Palette, Settings, Music } from 'lucide-react';
+import { Palette, Settings, Music } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useMusic } from '../context/MusicContext';
 import { MusicPlayer } from './MusicPlayer';
