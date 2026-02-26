@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Lunch';
+  src: url('/assets/fonts/lunchds.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --color-win-bg: #1a1a1a;
+  --color-win-dark: #0f0f0f;
+  background-color: #050505;
+  color: #fff;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Lunch', sans-serif;
+  font-size: 16px;
+  background-color: #000;
+}
+
+/* Win95 3D Bevels */
+.win95-outset {
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-right: 2px solid rgba(0, 0, 0, 0.8);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.8);
+  background: var(--color-win-bg);
+}
+
+/* Grit Texture Overlay - Position neutral */
+.surface-grit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.win95-inset {
+  border-left: 2px solid rgba(0, 0, 0, 0.8);
+  border-top: 2px solid rgba(0, 0, 0, 0.8);
+  border-right: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--color-win-dark);
+}
+
+/* CRT Effects */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  ),
+  linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.02),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.02)
+  );
+  z-index: 100;
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
+}
+
+.scanline {
+  width: 100%;
+  height: 100px;
+  z-index: 101;
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  position: fixed;
+  pointer-events: none;
+  animation: scanline 10s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@theme {
+  --font-lunch: 'Lunch', sans-serif;
+}
