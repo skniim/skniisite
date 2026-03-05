@@ -18,8 +18,7 @@ jobs:
       - name: Install and Build 🔧
         run: |
           npm install
-          chmod +x verify.sh
-          ./verify.sh
+          npm run build
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4

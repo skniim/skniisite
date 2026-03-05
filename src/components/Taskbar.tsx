@@ -7,15 +7,21 @@ import { MusicPlayer } from './MusicPlayer';
 
 interface TaskbarProps {
   onOpenWindow: (type: string) => void;
+  openWindows: string[];
+  minimizedWindows: string[];
 }
 
-export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow }) => {
+export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, minimizedWindows }) => {
   const [showStart, setShowStart] = useState(false);
   const [showMusic, setShowMusic] = useState(false);
   const { theme } = useTheme();
   const { isPlaying } = useMusic();
 
   const isTop = theme.taskbarPosition === 'top';
+  
+  const isTerminalOpen = openWindows.includes('terminal');
+  const isTerminalMinimized = minimizedWindows.includes('terminal');
+  const isTerminalActive = isTerminalOpen && !isTerminalMinimized;
 
   return (
     <div className={`h-12 win95-outset bg-[#1a1a1a] surface-grit flex items-center px-1 gap-2 relative z-[100] ${isTop ? 'order-first' : 'order-last'}`}>
@@ -35,6 +41,23 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow }) => {
       </button>
 
       <div className="h-8 border-r border-gray-700 mx-1 relative z-10" />
+
+      {/* SkniiTTY Button */}
+      <button 
+        onClick={() => onOpenWindow('terminal')}
+        className={`h-9 px-3 win95-outset flex items-center gap-2 font-bold active:win95-inset transition-colors hover:bg-gray-700 ${isTerminalActive ? 'win95-inset bg-gray-900' : 'bg-gray-800'}`}
+        title="SkniiTTY Terminal"
+      >
+        <img 
+          src="/assets/icons/skniitty.svg" 
+          alt="Terminal" 
+          className={`w-5 h-5 transition-all ${isTerminalActive ? 'brightness-125' : (isTerminalMinimized ? '' : 'brightness-75 hover:brightness-100')}`}
+          style={{ 
+            filter: isTerminalActive ? `drop-shadow(0 0 5px ${theme.primary})` : (isTerminalMinimized ? '' : `drop-shadow(0 0 2px ${theme.primary}44)`),
+            color: isTerminalMinimized ? theme.primary : undefined
+          }}
+        />
+      </button>
 
       {/* Center Spacer */}
       <div className="flex-1" />

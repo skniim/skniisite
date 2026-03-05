@@ -6,17 +6,59 @@ import { Taskbar } from './components/Taskbar';
 import { ThemeWindow, SettingsWindow } from './components/ThemeSettings';
 import { Starfield } from './components/Starfield';
 import { WelcomeWindow } from './components/WelcomeWindow';
+import { SkniiTTY } from './components/SkniiTTY';
 import { Palette, Settings, Cpu, Monitor } from 'lucide-react';
 
 const Desktop = () => {
   const { theme } = useTheme();
   const [openWindows, setOpenWindows] = useState<string[]>(['welcome']);
+  const [minimizedWindows, setMinimizedWindows] = useState<string[]>([]);
+  const [maximizedWindows, setMaximizedWindows] = useState<string[]>([]);
+  const [windowStack, setWindowStack] = useState<string[]>(['welcome']);
+
+  const focusWindow = (id: string) => {
+    setWindowStack(prev => {
+      const filtered = prev.filter(w => w !== id);
+      return [...filtered, id];
+    });
+  };
 
   const toggleWindow = (id: string) => {
-    console.log('Toggling window:', id);
-    setOpenWindows(prev => 
+    if (openWindows.includes(id)) {
+      if (minimizedWindows.includes(id)) {
+        setMinimizedWindows(prev => prev.filter(w => w !== id));
+        focusWindow(id);
+      } else {
+        setMinimizedWindows(prev => [...prev, id]);
+      }
+    } else {
+      setOpenWindows(prev => [...prev, id]);
+      setMinimizedWindows(prev => prev.filter(w => w !== id));
+      focusWindow(id);
+    }
+  };
+
+  const closeWindow = (id: string) => {
+    setOpenWindows(prev => prev.filter(w => w !== id));
+    setMinimizedWindows(prev => prev.filter(w => w !== id));
+    setMaximizedWindows(prev => prev.filter(w => w !== id));
+    setWindowStack(prev => prev.filter(w => w !== id));
+  };
+
+  const minimizeWindow = (id: string) => {
+    setMinimizedWindows(prev => [...prev, id]);
+  };
+
+  const maximizeWindow = (id: string) => {
+    focusWindow(id);
+    setMaximizedWindows(prev => 
       prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id]
     );
+  };
+
+  const getZIndex = (id: string) => {
+    const index = windowStack.indexOf(id);
+    return index === -1 ? 50 : 50 + index;
   };
 
   return (
@@ -32,7 +74,11 @@ const Desktop = () => {
       )}
 
       {/* Taskbar at Top/Bottom based on theme */}
-      <Taskbar onOpenWindow={toggleWindow} />
+      <Taskbar 
+        onOpenWindow={toggleWindow} 
+        openWindows={openWindows}
+        minimizedWindows={minimizedWindows}
+      />
 
       <main className="flex-1 relative p-6 z-10">
         {/* Desktop Icons */}
@@ -61,53 +107,106 @@ const Desktop = () => {
         )}
 
         {/* Windows Container */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none">
           {openWindows.includes('welcome') && (
-            <Window 
-              title="SYS_BOOT.EXE" 
-              icon={Monitor} 
-              onClose={() => toggleWindow('welcome')}
-              defaultPosition={{ x: 0, y: 0 }}
-            >
-              <WelcomeWindow />
-            </Window>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window 
+                title="SYS_BOOT.EXE" 
+                icon={Monitor} 
+                onClose={() => closeWindow('welcome')}
+                onMinimize={() => minimizeWindow('welcome')}
+                onMaximize={() => maximizeWindow('welcome')}
+                onFocus={() => focusWindow('welcome')}
+                zIndex={getZIndex('welcome')}
+                isMinimized={minimizedWindows.includes('welcome')}
+                isMaximized={maximizedWindows.includes('welcome')}
+                defaultPosition={{ x: 0, y: 0 }}
+              >
+                <WelcomeWindow />
+              </Window>
+            </div>
           )}
 
           {openWindows.includes('theme') && (
-            <Window 
-              title="Theme Settings" 
-              icon={Palette} 
-              onClose={() => toggleWindow('theme')}
-              defaultPosition={{ x: -100, y: -50 }}
-            >
-              <ThemeWindow />
-            </Window>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window 
+                title="Theme Settings" 
+                icon={Palette} 
+                onClose={() => closeWindow('theme')}
+                onMinimize={() => minimizeWindow('theme')}
+                onMaximize={() => maximizeWindow('theme')}
+                onFocus={() => focusWindow('theme')}
+                zIndex={getZIndex('theme')}
+                isMinimized={minimizedWindows.includes('theme')}
+                isMaximized={maximizedWindows.includes('theme')}
+                defaultPosition={{ x: 0, y: 0 }}
+              >
+                <ThemeWindow />
+              </Window>
+            </div>
           )}
 
           {openWindows.includes('settings') && (
-            <Window 
-              title="System Settings" 
-              icon={Settings} 
-              onClose={() => toggleWindow('settings')}
-              defaultPosition={{ x: 100, y: 50 }}
-            >
-              <SettingsWindow />
-            </Window>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window 
+                title="System Settings" 
+                icon={Settings} 
+                onClose={() => closeWindow('settings')}
+                onMinimize={() => minimizeWindow('settings')}
+                onMaximize={() => maximizeWindow('settings')}
+                onFocus={() => focusWindow('settings')}
+                zIndex={getZIndex('settings')}
+                isMinimized={minimizedWindows.includes('settings')}
+                isMaximized={maximizedWindows.includes('settings')}
+                defaultPosition={{ x: 0, y: 0 }}
+              >
+                <SettingsWindow />
+              </Window>
+            </div>
           )}
 
           {openWindows.includes('hardware') && (
-            <Window 
-              title="Hardware_Monitor.sys" 
-              icon={Cpu} 
-              onClose={() => toggleWindow('hardware')}
-              defaultPosition={{ x: 0, y: 0 }}
-            >
-              <div className="space-y-2">
-                <p style={{ color: theme.primary }}>CPU_LOAD: [|||||-----] 50%</p>
-                <p style={{ color: theme.secondary }}>MEM_USED: [||||||||--] 82%</p>
-                <p className="text-[10px] mt-4 opacity-50">LOCATION: /DEV/SKNII/SYSTEM</p>
-              </div>
-            </Window>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window 
+                title="Hardware_Monitor.sys" 
+                icon={Cpu} 
+                onClose={() => closeWindow('hardware')}
+                onMinimize={() => minimizeWindow('hardware')}
+                onMaximize={() => maximizeWindow('hardware')}
+                onFocus={() => focusWindow('hardware')}
+                zIndex={getZIndex('hardware')}
+                isMinimized={minimizedWindows.includes('hardware')}
+                isMaximized={maximizedWindows.includes('hardware')}
+                defaultPosition={{ x: 0, y: 0 }}
+              >
+                <div className="space-y-2">
+                  <p style={{ color: theme.primary }}>CPU_LOAD: [|||||-----] 50%</p>
+                  <p style={{ color: theme.secondary }}>MEM_USED: [||||||||--] 82%</p>
+                  <p className="text-[10px] mt-4 opacity-50">LOCATION: /DEV/SKNII/SYSTEM</p>
+                </div>
+              </Window>
+            </div>
+          )}
+
+          {openWindows.includes('terminal') && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window 
+                title="SkniiTTY" 
+                icon="/assets/icons/skniitty.svg" 
+                onClose={() => closeWindow('terminal')}
+                onMinimize={() => minimizeWindow('terminal')}
+                onMaximize={() => maximizeWindow('terminal')}
+                onFocus={() => focusWindow('terminal')}
+                zIndex={getZIndex('terminal')}
+                isMinimized={minimizedWindows.includes('terminal')}
+                isMaximized={maximizedWindows.includes('terminal')}
+                defaultPosition={{ x: 0, y: 0 }}
+                className="max-w-4xl w-[900px]"
+                flush
+              >
+                <SkniiTTY />
+              </Window>
+            </div>
           )}
         </div>
       </main>
