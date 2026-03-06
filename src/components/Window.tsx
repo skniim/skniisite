@@ -141,15 +141,15 @@ export const Window: React.FC<WindowProps> = ({
   };
 
   const maximizedStyles = isMaximized ? {
-    top: isTop ? '48px' : '0',
-    bottom: isTop ? '0' : '48px',
-    left: '0',
-    right: '0',
-    width: '100vw',
-    height: 'calc(100vh - 48px)',
+    top: isTop ? '48px' : '10px',
+    bottom: isTop ? '10px' : '48px',
+    left: '10px',
+    right: '10px',
+    width: 'calc(100vw - 20px)',
+    height: 'calc(100vh - 48px - 10px)',
     maxWidth: 'none',
     margin: '0',
-    zIndex: 1000,
+    zIndex,
   } : {
     zIndex,
     boxShadow: isActive ? `0 0 20px ${theme.primary}66` : 'none',
