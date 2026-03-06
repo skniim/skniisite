@@ -81,7 +81,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
       </button>
 
       {/* OS Status */}
-      <div className="win95-inset h-9 px-3 flex items-center gap-2 text-xs font-bold relative z-10" style={{ color: theme.primary }}>
+      <div className="hidden sm:flex win95-inset h-9 px-3 items-center gap-2 text-xs font-bold relative z-10" style={{ color: theme.primary }}>
         <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: theme.primary }} />
         OS_ACTIVE
       </div>

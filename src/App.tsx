@@ -77,7 +77,7 @@ const Desktop = () => {
   };
 
   return (
-    <div className={`h-screen w-screen flex flex-col relative overflow-hidden select-none`}>
+    <div className={`h-[100dvh] w-screen flex flex-col relative overflow-hidden select-none`}>
       <Starfield />
       <MouseTrail />
       
@@ -237,7 +237,7 @@ const Desktop = () => {
                 isMinimized={minimizedWindows.includes('terminal')}
                 isMaximized={maximizedWindows.includes('terminal')}
                 defaultPosition={{ x: 0, y: 0 }}
-                className="max-w-4xl w-[900px]"
+                className="max-w-4xl w-[95vw] md:w-[900px]"
                 flush
               >
                 <SkniiTTY onCrash={triggerBSOD} />
