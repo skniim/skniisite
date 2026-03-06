@@ -23,6 +23,7 @@ const AVAILABLE_ICONS = [
   { label: 'Rune', path: '/assets/icons/launcher-rune.svg' },
   { label: 'Sknii', path: '/assets/icons/sknii.svg' },
   { label: 'SkniiTTY', path: '/assets/icons/skniitty.svg' },
+  { label: 'Calendar', path: '/assets/icons/calendar.svg' },
   { label: 'Unknown', path: '/assets/icons/uknown.svg' },
 ];
 
