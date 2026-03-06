@@ -40,6 +40,14 @@ export const SkniiTTY: React.FC<{ onCrash?: () => void }> = ({ onCrash }) => {
     }
   }, [history]);
 
+  // Clear history when the terminal is closed (unmount).
+  // Minimize keeps the component mounted so this does not fire on minimize.
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('skniitty_history');
+    };
+  }, []);
+
   const handleCommand = (cmd: string) => {
     const cleanCmd = cmd.trim().toLowerCase();
     const newHistory: LogEntry[] = [...history, { type: 'input', text: `> ${cmd}` }];

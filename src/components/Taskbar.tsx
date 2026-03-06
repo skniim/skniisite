@@ -33,31 +33,37 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
         onClick={() => { setShowStart(!showStart); setShowMusic(false); }}
         className={`h-9 px-4 win95-outset flex items-center gap-2 font-bold relative z-10 active:win95-inset transition-colors ${showStart ? 'win95-inset bg-gray-900' : 'bg-gray-800'}`}
       >
-        <img 
-          src="/assets/icons/launcher-rune.svg" 
-          alt="Start" 
-          className={`w-4 h-4 ${showStart ? 'brightness-125' : 'brightness-50 grayscale'}`} 
-          style={{ filter: showStart ? `drop-shadow(0 0 5px ${theme.primary})` : '' }}
+        <div
+          className={`w-4 h-4 transition-all ${showStart ? '' : 'opacity-50'}`}
+          style={{
+            backgroundColor: theme.primary,
+            WebkitMask: 'url(/assets/icons/launcher-rune.svg) no-repeat center / contain',
+            mask: 'url(/assets/icons/launcher-rune.svg) no-repeat center / contain',
+          }}
         />
-        <span style={{ color: showStart ? theme.primary : '#9ca3af' }}>START</span>
+        <span style={{ color: theme.primary, opacity: showStart ? 1 : 0.6 }}>START</span>
       </button>
 
       <div className="h-8 border-r border-gray-700 mx-1 relative z-10" />
 
       {/* SkniiTTY Button */}
-      <button 
+      <button
         onClick={() => onOpenWindow('terminal')}
-        className={`h-9 px-3 win95-outset flex items-center gap-2 font-bold active:win95-inset transition-colors hover:bg-gray-700 ${isTerminalActive ? 'win95-inset bg-gray-900' : 'bg-gray-800'}`}
+        className={`h-9 px-3 win95-outset flex flex-col items-center justify-center gap-0.5 font-bold active:win95-inset transition-colors hover:bg-gray-700 ${isTerminalActive ? 'win95-inset bg-gray-900' : 'bg-gray-800'}`}
         title="SkniiTTY Terminal"
       >
-        <img 
-          src="/assets/icons/skniitty.svg" 
-          alt="Terminal" 
-          className={`w-5 h-5 transition-all ${isTerminalActive ? 'brightness-125' : (isTerminalMinimized ? '' : 'brightness-75 hover:brightness-100')}`}
-          style={{ 
-            filter: isTerminalActive ? `drop-shadow(0 0 5px ${theme.primary})` : (isTerminalMinimized ? '' : `drop-shadow(0 0 2px ${theme.primary}44)`),
-            color: isTerminalMinimized ? theme.primary : undefined
+        <div
+          className={`w-5 h-5 transition-all ${isTerminalActive ? '' : 'opacity-60'}`}
+          style={{
+            backgroundColor: theme.primary,
+            WebkitMask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
+            mask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
           }}
+        />
+        {/* Open indicator — visible whenever the terminal is open (even if minimized) */}
+        <div
+          className="h-0.5 w-4 rounded-full transition-all duration-200"
+          style={{ backgroundColor: isTerminalOpen ? theme.primary : 'transparent' }}
         />
       </button>
 
