@@ -10,12 +10,16 @@ import { WelcomeWindow } from './components/WelcomeWindow';
 import { SkniiTTY } from './components/SkniiTTY';
 import { MouseTrail } from './components/MouseTrail';
 import { BSOD } from './components/BSOD';
-import { Palette, Settings, Cpu, Monitor, ExternalLink, Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Edit2, Check, Image as ImageIcon, Layout, Box, Download, Upload, ListTree, BookOpen } from 'lucide-react';
+import { Palette, Settings, Cpu, Monitor, ExternalLink, Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Edit2, Check, Image as ImageIcon, Layout, Box, Download, Upload, ListTree, BookOpen, Globe } from 'lucide-react';
 import { ManualWindow } from './components/ManualWindow';
 
 const AVAILABLE_ICONS = [
   { label: 'Globe', path: '/assets/icons/globe.svg' },
   { label: 'GitHub', path: '/assets/icons/github.svg' },
+  { label: 'Claude', path: '/assets/icons/claude.svg', color: true },
+  { label: 'Gemini', path: '/assets/icons/gemini.svg', color: true },
+  { label: 'Discord', path: '/assets/icons/discord.svg', color: true },
+  { label: 'ERF', path: '/assets/icons/erf.svg', color: true },
   { label: 'Folder', path: '/assets/icons/folder.svg' },
   { label: 'Terminal', path: '/assets/icons/terminal.svg' },
   { label: 'Message', path: '/assets/icons/message.svg' },
@@ -27,12 +31,42 @@ const AVAILABLE_ICONS = [
   { label: 'Unknown', path: '/assets/icons/uknown.svg' },
 ];
 
+const isColorIcon = (path: string) => {
+  return AVAILABLE_ICONS.find(i => i.path === path)?.color || false;
+};
+
 const ShortcutConfigWindow = () => {
   const { theme } = useTheme();
-  const { groups, settings, updateSettings, addGroup, removeGroup, updateGroup, addSubGroup, removeSubGroup, updateSubGroup, addLink, removeLink, reorderGroups, reorderLinks, reorderSubGroups, importConfig, clearConfig } = useUserLinks();
+  const { groups, settings, updateSettings, addGroup, removeGroup, updateGroup, addSubGroup, removeSubGroup, updateSubGroup, addLink, removeLink, reorderGroups, reorderLinks, reorderSubGroups, importConfig, clearConfig, fetchRemoteConfig } = useUserLinks();
   const [activeTab, setActiveTab] = useState<'shortcuts' | 'appearance' | 'data'>('shortcuts');
   
-  // Group editing state
+  // Sync state
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSync = async () => {
+    if (!settings.syncUrl) return;
+    setSyncLoading(true);
+    setSyncStatus('idle');
+    try {
+      await fetchRemoteConfig(settings.syncUrl);
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } catch (err) {
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!settings.syncUrl) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('config', settings.syncUrl);
+    navigator.clipboard.writeText(url.toString());
+    alert('Configuration link copied to clipboard!');
+  };
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupColor, setNewGroupColor] = useState('');
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
@@ -446,16 +480,76 @@ const ShortcutConfigWindow = () => {
             </div>
           </div>
         ) : (
-          <div className="space-y-6 p-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">Backup & Restore</h3>
+          <div className="space-y-6 p-4 overflow-y-auto custom-scrollbar h-full">
+            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">Cloud Sync</h3>
+            <div className="space-y-4 p-4 win95-outset bg-black/20">
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5" style={{ color: theme.accent }} />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold uppercase text-white">Remote Sync</span>
+                  <span className="text-[10px] opacity-50">Synchronize your shortcuts across devices via URL</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[8px] font-bold uppercase opacity-50 block">Config URL (JSON)</label>
+                <div className="flex gap-2">
+                  <input 
+                    value={settings.syncUrl}
+                    onChange={(e) => updateSettings({ syncUrl: e.target.value })}
+                    className="flex-1 bg-gray-900 border-none px-2 py-1.5 text-xs win95-inset"
+                    placeholder="e.g. https://gist.../config.json"
+                    style={{ color: theme.accent }}
+                  />
+                  <button 
+                    onClick={handleSync}
+                    disabled={!settings.syncUrl || syncLoading}
+                    className={`px-4 py-1.5 win95-outset text-[10px] font-bold uppercase hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 ${syncStatus === 'success' ? 'text-green-500' : syncStatus === 'error' ? 'text-red-500' : ''}`}
+                    style={syncStatus === 'idle' ? { color: theme.accent } : {}}
+                  >
+                    {syncLoading ? 'Syncing...' : syncStatus === 'success' ? 'Synced!' : syncStatus === 'error' ? 'Failed' : 'Sync Now'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2 win95-inset bg-black/20">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase">Auto-Sync on Load</span>
+                  <span className="text-[8px] opacity-50">Fetch remote config every time the page loads</span>
+                </div>
+                <button 
+                  onClick={() => updateSettings({ autoSync: !settings.autoSync })}
+                  className={`px-3 py-1 text-[9px] font-bold win95-outset transition-colors ${settings.autoSync ? 'text-green-500 bg-green-900/10' : 'text-red-500 bg-red-900/10'}`}
+                >
+                  {settings.autoSync ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleCopyLink}
+                  disabled={!settings.syncUrl}
+                  className="flex-1 py-1.5 win95-outset text-[9px] font-bold uppercase hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-3 h-3" /> Copy Sync Link for Phone
+                </button>
+              </div>
+              
+              <p className="text-[9px] opacity-40 italic leading-relaxed">
+                Tip: Host your config on a "Secret Gist" on GitHub and use the "Raw" URL. 
+                Any device using your "Sync Link" will automatically stay up to date.
+              </p>
+            </div>
+
+            <h3 className="text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">Local Backup</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3 p-4 win95-outset bg-black/20">
                 <div className="flex items-center gap-3">
                   <Download className="w-5 h-5" style={{ color: theme.primary }} />
-                  <span className="text-xs font-bold uppercase">Export Config</span>
+                  <span className="text-xs font-bold uppercase">Export</span>
                 </div>
-                <p className="text-[10px] opacity-50">Save your current setup to a .json file</p>
+                <p className="text-[10px] opacity-50">Save setup to .json file</p>
                 <button 
                   onClick={handleExport}
                   className="w-full py-2 win95-outset text-[10px] font-bold uppercase hover:bg-gray-800"
@@ -468,9 +562,9 @@ const ShortcutConfigWindow = () => {
               <div className="space-y-3 p-4 win95-outset bg-black/20">
                 <div className="flex items-center gap-3">
                   <Upload className="w-5 h-5" style={{ color: theme.secondary }} />
-                  <span className="text-xs font-bold uppercase">Import Config</span>
+                  <span className="text-xs font-bold uppercase">Import</span>
                 </div>
-                <p className="text-[10px] opacity-50">Load a setup from a .json file</p>
+                <p className="text-[10px] opacity-50">Load setup from .json file</p>
                 <div className="relative">
                   <input 
                     type="file" 
@@ -489,7 +583,7 @@ const ShortcutConfigWindow = () => {
               Warning: Importing a configuration will overwrite your current shortcuts and settings.
             </div>
 
-            <div className="mt-auto pt-4 border-t border-white/5">
+            <div className="pt-4 border-t border-white/5">
               <button 
                 onClick={handleClear}
                 className="w-full py-2 win95-outset text-[10px] font-bold uppercase hover:bg-red-950 transition-colors text-red-500"
@@ -562,15 +656,19 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
                                 style={settings.showFrames ? {} : { color: linkColor }}
                               >
                                 {link.icon ? (
-                                  <div 
-                                    className="w-8 h-8 transition-all"
-                                    style={{ 
-                                      backgroundColor: linkColor,
-                                      WebkitMask: `url(${link.icon}) no-repeat center / contain`,
-                                      mask: `url(${link.icon}) no-repeat center / contain`,
-                                      filter: !settings.showFrames ? `drop-shadow(0 0 5px ${linkColor}66)` : 'none',
-                                    }}
-                                  />
+                                  isColorIcon(link.icon) ? (
+                                    <img src={link.icon} alt="" className="w-8 h-8 object-contain" style={{ filter: !settings.showFrames ? `drop-shadow(0 0 5px ${linkColor}66)` : 'none' }} />
+                                  ) : (
+                                    <div 
+                                      className="w-8 h-8 transition-all"
+                                      style={{ 
+                                        backgroundColor: linkColor,
+                                        WebkitMask: `url(${link.icon}) no-repeat center / contain`,
+                                        mask: `url(${link.icon}) no-repeat center / contain`,
+                                        filter: !settings.showFrames ? `drop-shadow(0 0 5px ${linkColor}66)` : 'none',
+                                      }}
+                                    />
+                                  )
                                 ) : (
                                   <ExternalLink className="w-8 h-8" style={{ color: linkColor }} />
                                 )}
@@ -608,15 +706,19 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
                                   style={settings.showFrames ? {} : { color: linkColor }}
                                 >
                                   {link.icon ? (
-                                    <div 
-                                      className="w-8 h-8 transition-all"
-                                      style={{ 
-                                        backgroundColor: linkColor,
-                                        WebkitMask: `url(${link.icon}) no-repeat center / contain`,
-                                        mask: `url(${link.icon}) no-repeat center / contain`,
-                                        filter: !settings.showFrames ? `drop-shadow(0 0 5px ${linkColor}66)` : 'none',
-                                      }}
-                                    />
+                                    isColorIcon(link.icon) ? (
+                                      <img src={link.icon} alt="" className="w-8 h-8 object-contain" style={{ filter: !settings.showFrames ? `drop-shadow(0 0 5px ${linkColor}66)` : 'none' }} />
+                                    ) : (
+                                      <div 
+                                        className="w-8 h-8 transition-all"
+                                        style={{ 
+                                          backgroundColor: linkColor,
+                                          WebkitMask: `url(${link.icon}) no-repeat center / contain`,
+                                          mask: `url(${link.icon}) no-repeat center / contain`,
+                                          filter: !settings.showFrames ? `drop-shadow(0 0 5px ${linkColor}66)` : 'none',
+                                        }}
+                                      />
+                                    )
                                   ) : (
                                     <ExternalLink className="w-8 h-8" style={{ color: linkColor }} />
                                   )}

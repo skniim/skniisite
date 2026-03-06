@@ -26,6 +26,8 @@ export interface UserLinkGroup {
 export interface UserLinksSettings {
   showFrames: boolean;
   startMaximized: boolean;
+  syncUrl: string;
+  autoSync: boolean;
 }
 
 interface UserLinksContextType {
@@ -45,6 +47,7 @@ interface UserLinksContextType {
   updateSettings: (updates: Partial<UserLinksSettings>) => void;
   importConfig: (config: { groups: UserLinkGroup[], settings: UserLinksSettings }) => void;
   clearConfig: () => void;
+  fetchRemoteConfig: (url: string) => Promise<void>;
 }
 
 const UserLinksContext = createContext<UserLinksContextType | undefined>(undefined);
@@ -52,6 +55,8 @@ const UserLinksContext = createContext<UserLinksContextType | undefined>(undefin
 const defaultSettings: UserLinksSettings = {
   showFrames: true,
   startMaximized: false,
+  syncUrl: '',
+  autoSync: false,
 };
 
 const generateId = () => {
@@ -87,6 +92,34 @@ export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     return defaultSettings;
   });
+
+  const fetchRemoteConfig = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch configuration');
+      const config = await response.json();
+      if (config.groups && Array.isArray(config.groups)) {
+        importConfig(config);
+      }
+    } catch (err) {
+      console.error('Failed to sync remote configuration', err);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    // Handle URL parameter config
+    const params = new URLSearchParams(window.location.search);
+    const remoteUrl = params.get('config');
+    if (remoteUrl) {
+      fetchRemoteConfig(remoteUrl).catch(() => {});
+      // Clean up URL
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    } else if (settings.autoSync && settings.syncUrl) {
+      fetchRemoteConfig(settings.syncUrl).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('sknii-link-groups-v3', JSON.stringify(groups));
@@ -210,7 +243,7 @@ export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const importConfig = (config: { groups: UserLinkGroup[], settings: UserLinksSettings }) => {
     if (config.groups) setGroups(config.groups);
-    if (config.settings) setSettings(config.settings);
+    if (config.settings) setSettings(prev => ({ ...prev, ...config.settings }));
   };
 
   const clearConfig = () => {
@@ -235,7 +268,8 @@ export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       reorderSubGroups,
       updateSettings,
       importConfig,
-      clearConfig
+      clearConfig,
+      fetchRemoteConfig
     }}>
       {children}
     </UserLinksContext.Provider>

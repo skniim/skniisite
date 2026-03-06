@@ -18,8 +18,10 @@ You can manage your links via the "Shortcuts" configuration. Add groups to creat
 CUSTOMIZATION:
 Use the Theme Settings to change the system colors and CRT effects.
 
-BACKUP:
-Don't forget to export your configuration in the Backup tab to save your layout permanently!`,
+BACKUP & SYNC:
+Don't forget to export your configuration in the Backup tab to save your layout permanently! 
+
+You can also use "Cloud Sync" to synchronize your shortcuts across devices. Host your JSON configuration on a platform like a GitHub Secret Gist (use the 'Raw' URL) and provide that URL in the Cloud Sync settings. Generate a 'Sync Link' to quickly set up your phone or other devices.`,
   },
   'about': {
     id: 'about',
