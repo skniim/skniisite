@@ -23,6 +23,12 @@ export const SkniiTTY: React.FC<{ onCrash?: () => void }> = ({ onCrash }) => {
         return JSON.parse(saved);
       } catch (e) {
         console.error("Failed to parse history", e);
+        return [
+          { type: 'header', text: 'SKNII OS [Version 1.0.42]' },
+          { type: 'header', text: '(c) 2026 Sknii Corp. All rights reserved.' },
+          { type: 'header', text: 'Welcome to SkniiTTY. Type "help" for commands.' },
+          { type: 'output', text: '' },
+        ];
       }
     }
     return [

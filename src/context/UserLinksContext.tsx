@@ -54,6 +54,14 @@ const defaultSettings: UserLinksSettings = {
   startMaximized: false,
 };
 
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback for older browsers or non-secure contexts
+  return Math.random().toString(36).substring(2, 11) + '-' + Date.now().toString(36);
+};
+
 export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [groups, setGroups] = useState<UserLinkGroup[]>(() => {
     const saved = localStorage.getItem('sknii-link-groups-v3');
@@ -89,7 +97,7 @@ export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [settings]);
 
   const addGroup = (name: string, color?: string) => {
-    setGroups(prev => [...prev, { id: crypto.randomUUID(), name, links: [], subgroups: [], color }]);
+    setGroups(prev => [...prev, { id: generateId(), name, links: [], subgroups: [], color }]);
   };
 
   const removeGroup = (id: string) => {
@@ -105,7 +113,7 @@ export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (g.id === groupId) {
         return {
           ...g,
-          subgroups: [...(g.subgroups || []), { id: crypto.randomUUID(), name, links: [], color }]
+          subgroups: [...(g.subgroups || []), { id: generateId(), name, links: [], color }]
         };
       }
       return g;
@@ -140,12 +148,12 @@ export const UserLinksProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setGroups(prev => prev.map(g => {
       if (g.id === groupId) {
         if (subGroupId === null) {
-          return { ...g, links: [...g.links, { ...link, id: crypto.randomUUID() }] };
+          return { ...g, links: [...g.links, { ...link, id: generateId() }] };
         } else {
           return {
             ...g,
             subgroups: (g.subgroups || []).map(sg => 
-              sg.id === subGroupId ? { ...sg, links: [...sg.links, { ...link, id: crypto.randomUUID() }] } : sg
+              sg.id === subGroupId ? { ...sg, links: [...sg.links, { ...link, id: generateId() }] } : sg
             )
           };
         }
