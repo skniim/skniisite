@@ -235,29 +235,32 @@ const ShortcutConfigWindow = () => {
   const effectiveLinkColor = newLinkColor || activeSub?.color || activeGroup?.color || theme.primary;
 
   return (
-    <div className="flex h-full gap-4 overflow-hidden">
+    <div className="flex h-full gap-2 md:gap-4 overflow-hidden">
       {/* Sidebar */}
-      <div className="w-32 flex flex-col gap-1 border-r border-white/5 pr-4">
+      <div className="w-12 md:w-32 flex flex-col gap-1 border-r border-white/5 pr-2 md:pr-4">
         <button 
           onClick={() => setActiveTab('shortcuts')}
           className={`flex flex-col items-center gap-1 p-2 win95-outset transition-colors ${activeTab === 'shortcuts' ? 'bg-white/10' : 'bg-black/20 hover:bg-black/40'}`}
+          title="Shortcuts"
         >
-          <Layout className="w-6 h-6" style={{ color: theme.primary }} />
-          <span className="text-[10px] font-bold uppercase tracking-tight">Shortcuts</span>
+          <Layout className="w-5 h-5 md:w-6 md:h-6" style={{ color: theme.primary }} />
+          <span className="hidden md:block text-[10px] font-bold uppercase tracking-tight">Shortcuts</span>
         </button>
         <button 
           onClick={() => setActiveTab('appearance')}
           className={`flex flex-col items-center gap-1 p-2 win95-outset transition-colors ${activeTab === 'appearance' ? 'bg-white/10' : 'bg-black/20 hover:bg-black/40'}`}
+          title="Appearance"
         >
-          <Palette className="w-6 h-6" style={{ color: theme.secondary }} />
-          <span className="text-[10px] font-bold uppercase tracking-tight">Appearance</span>
+          <Palette className="w-5 h-5 md:w-6 md:h-6" style={{ color: theme.secondary }} />
+          <span className="hidden md:block text-[10px] font-bold uppercase tracking-tight">Appearance</span>
         </button>
         <button 
           onClick={() => setActiveTab('data')}
           className={`flex flex-col items-center gap-1 p-2 win95-outset transition-colors ${activeTab === 'data' ? 'bg-white/10' : 'bg-black/20 hover:bg-black/40'}`}
+          title="Backup"
         >
-          <Download className="w-6 h-6" style={{ color: theme.accent }} />
-          <span className="text-[10px] font-bold uppercase tracking-tight">Backup</span>
+          <Download className="w-5 h-5 md:w-6 md:h-6" style={{ color: theme.accent }} />
+          <span className="hidden md:block text-[10px] font-bold uppercase tracking-tight">Backup</span>
         </button>
       </div>
 
@@ -493,7 +496,7 @@ const ShortcutConfigWindow = () => {
               
               <div className="space-y-2">
                 <label className="text-[8px] font-bold uppercase opacity-50 block">Config URL (JSON)</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col md:flex-row gap-2">
                   <input 
                     value={settings.syncUrl}
                     onChange={(e) => updateSettings({ syncUrl: e.target.value })}
@@ -504,7 +507,7 @@ const ShortcutConfigWindow = () => {
                   <button 
                     onClick={handleSync}
                     disabled={!settings.syncUrl || syncLoading}
-                    className={`px-4 py-1.5 win95-outset text-[10px] font-bold uppercase hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 ${syncStatus === 'success' ? 'text-green-500' : syncStatus === 'error' ? 'text-red-500' : ''}`}
+                    className={`w-full md:w-auto px-4 py-1.5 win95-outset text-[10px] font-bold uppercase hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2 ${syncStatus === 'success' ? 'text-green-500' : syncStatus === 'error' ? 'text-red-500' : ''}`}
                     style={syncStatus === 'idle' ? { color: theme.accent } : {}}
                   >
                     {syncLoading ? 'Syncing...' : syncStatus === 'success' ? 'Synced!' : syncStatus === 'error' ? 'Failed' : 'Sync Now'}
@@ -612,9 +615,9 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
         <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" style={{ color: theme.primary }} />
       </button>
 
-      <div className="h-full w-full flex items-center justify-center overflow-auto p-4 custom-scrollbar">
+      <div className="h-full w-full flex items-start justify-center md:items-center md:justify-center overflow-auto p-4 pt-12 md:p-4 custom-scrollbar">
         {groups.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 opacity-50">
+          <div className="flex flex-col items-center gap-4 opacity-50 m-auto">
             <Monitor className="w-16 h-16" style={{ color: theme.primary }} />
             <div className="text-center space-y-2">
               <p className="font-bold uppercase tracking-widest">No Shortcuts Configured</p>
@@ -628,7 +631,7 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
             </div>
           </div>
         ) : (
-          <div className="flex gap-12 items-start">
+          <div className="flex flex-wrap md:flex-nowrap gap-x-6 gap-y-10 md:gap-12 items-start justify-center m-0 md:m-auto h-fit">
             {groups.map(group => {
               const groupColor = group.color || theme.accent;
               return (
