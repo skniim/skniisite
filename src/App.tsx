@@ -100,11 +100,18 @@ const Desktop = () => {
       />
 
       <main className="flex-1 relative p-6 z-10">
-        {/* Desktop frame — four strips forming a 10px stone border */}
-        <div className="absolute top-0 left-0 right-0 h-[10px] win95-outset surface-grit pointer-events-none z-[60]" />
-        <div className="absolute bottom-0 left-0 right-0 h-[10px] win95-outset surface-grit pointer-events-none z-[60]" />
-        <div className="absolute top-[10px] bottom-[10px] left-0 w-[10px] win95-outset surface-grit pointer-events-none z-[60]" />
-        <div className="absolute top-[10px] bottom-[10px] right-0 w-[10px] win95-outset surface-grit pointer-events-none z-[60]" />
+        {/* Desktop frame — Option A: 4 strips (full surround) */}
+        {/* <div className="absolute top-0 left-0 right-0 h-[10px] win95-outset surface-grit pointer-events-none z-[60]" /> */}
+        {/* <div className="absolute bottom-0 left-0 right-0 h-[10px] win95-outset surface-grit pointer-events-none z-[60]" /> */}
+        {/* <div className="absolute top-[10px] bottom-[10px] left-0 w-[10px] win95-outset surface-grit pointer-events-none z-[60]" /> */}
+        {/* <div className="absolute top-[10px] bottom-[10px] right-0 w-[10px] win95-outset surface-grit pointer-events-none z-[60]" /> */}
+
+        {/* Desktop frame — Option B: 3 strips (omits the edge adjacent to the taskbar) */}
+        {theme.taskbarPosition === 'bottom' && <div className="absolute top-0 left-0 right-0 h-[10px] win95-outset surface-grit pointer-events-none z-[60]" />}
+        {theme.taskbarPosition === 'top'    && <div className="absolute bottom-0 left-0 right-0 h-[10px] win95-outset surface-grit pointer-events-none z-[60]" />}
+        <div className={`absolute ${theme.taskbarPosition === 'top' ? 'top-0 bottom-[10px]' : 'top-[10px] bottom-0'} left-0 w-[10px] win95-outset surface-grit pointer-events-none z-[60]`} />
+        <div className={`absolute ${theme.taskbarPosition === 'top' ? 'top-0 bottom-[10px]' : 'top-[10px] bottom-0'} right-0 w-[10px] win95-outset surface-grit pointer-events-none z-[60]`} />
+
         {/* Desktop Icons */}
         {theme.showDesktopIcons && (
           <div className="flex flex-col gap-8 pointer-events-auto w-fit">

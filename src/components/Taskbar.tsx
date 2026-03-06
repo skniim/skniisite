@@ -26,7 +26,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
 
   return (
     <>
-    <div className={`h-12 win95-outset bg-[#1a1a1a] surface-grit flex items-center px-1 gap-2 relative z-[100] ${isTop ? 'order-first' : 'order-last'}`}>
+    <div className={`h-12 win95-outset surface-grit flex items-center px-1 gap-2 relative z-[100] ${isTop ? 'order-first' : 'order-last'}`}>
       
       {/* Start Button */}
       <button 

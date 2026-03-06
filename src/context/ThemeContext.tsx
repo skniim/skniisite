@@ -4,6 +4,7 @@ type Theme = {
   primary: string;
   secondary: string;
   accent: string;
+  surface: string;
   taskbarPosition: 'top' | 'bottom';
   crtEnabled: boolean;
   showDesktopIcons: boolean;
@@ -21,6 +22,7 @@ const defaultTheme: Theme = {
   primary: '#05d9e8',   // Cyan
   secondary: '#ff2a6d', // Pink
   accent: '#bd00ff',    // Purple
+  surface: '#1a1a1a',   // System UI background (taskbar, frames)
   taskbarPosition: 'top',
   crtEnabled: true,
   showDesktopIcons: false,
@@ -76,6 +78,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           '--color-primary': theme.primary,
           '--color-secondary': theme.secondary,
           '--color-accent': theme.accent,
+          '--color-win-bg': theme.surface,
         }}
         className="contents"
       >

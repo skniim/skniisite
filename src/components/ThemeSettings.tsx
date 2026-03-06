@@ -47,6 +47,26 @@ export const ThemeWindow: React.FC = () => {
       </div>
 
       <div>
+        <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-gray-400">Surface Color</label>
+        <div className="flex gap-2">
+          {['#1a1a1a', '#0d1117', '#1e1b2e', '#12100e'].map(c => (
+            <button
+              key={c}
+              onClick={() => updateTheme({ surface: c })}
+              className={`w-8 h-8 win95-outset ${theme.surface === c ? 'ring-2 ring-white' : ''}`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+          <input
+            type="color"
+            value={theme.surface}
+            onChange={(e) => updateTheme({ surface: e.target.value })}
+            className="w-8 h-8 bg-transparent border-none"
+          />
+        </div>
+      </div>
+
+      <div>
         <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-gray-400">Star Color</label>
         <div className="flex gap-2">
           {['#ffffff', '#05d9e8', '#f9c80e', '#ff2a6d'].map(c => (
