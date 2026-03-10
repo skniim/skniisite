@@ -656,8 +656,6 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
                             <a
                               key={link.id}
                               href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
                               className="flex flex-col items-center gap-2 group transition-transform hover:scale-110 active:scale-95"
                             >
                               <div 
@@ -705,9 +703,9 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
                           {sub.links.map(link => {
                             const linkColor = link.color || sub.color || group.color || theme.primary;
                             return (
-                              <button
+                              <a
                                 key={link.id}
-                                onClick={() => window.open(link.url, '_blank')}
+                                href={link.url}
                                 className="flex flex-col items-center gap-2 group transition-transform hover:scale-110 active:scale-95"
                               >
                                 <div 
@@ -739,7 +737,7 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
                                 >
                                   {link.label}
                                 </span>
-                              </button>
+                              </a>
                             );
                           })}
                         </div>
