@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, Settings, Music, List, ExternalLink, BookOpen } from 'lucide-react';
+import { Palette, Settings, Music, List, ExternalLink, BookOpen, Monitor, Cpu, Pin } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useMusic } from '../context/MusicContext';
+import { useSystem } from '../context/SystemContext';
 import { MusicPlayer } from './MusicPlayer';
 
 interface TaskbarProps {
@@ -12,12 +13,70 @@ interface TaskbarProps {
   onShutdown: () => void;
 }
 
+const APP_METADATA: Record<string, { label: string, icon: any, colorKey: 'primary' | 'secondary' | 'accent' }> = {
+  theme: { label: 'THEME_COLORS', icon: Palette, colorKey: 'primary' },
+  shortcuts: { label: 'SHORTCUTS', icon: ExternalLink, colorKey: 'secondary' },
+  manual: { label: 'MANUAL', icon: BookOpen, colorKey: 'accent' },
+  settings: { label: 'SETTINGS', icon: Settings, colorKey: 'primary' },
+  hardware: { label: 'HARDWARE', icon: Cpu, colorKey: 'secondary' },
+  skniigachi: { label: 'SKNIIGACHI', icon: Monitor, colorKey: 'accent' },
+};
+
+interface ContextMenuProps {
+  x: number;
+  y: number;
+  onClose: () => void;
+  appId: string;
+}
+
+const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, appId }) => {
+  const { theme } = useTheme();
+  const { pinApp, unpinApp, isPinned } = useSystem();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  const pinned = isPinned(appId);
+
+  return (
+    <div 
+      ref={menuRef}
+      className="fixed z-[200] w-48 win95-outset surface-grit p-1 shadow-2xl"
+      style={{ left: x, top: y }}
+    >
+      <button
+        onClick={() => {
+          if (pinned) unpinApp(appId);
+          else pinApp(appId);
+          onClose();
+        }}
+        className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-[10px] uppercase tracking-wider"
+        style={{ color: theme.primary }}
+      >
+        <Pin className={`w-3 h-3 ${pinned ? 'rotate-45' : ''}`} />
+        {pinned ? 'Unpin from Taskbar' : 'Pin to Taskbar'}
+      </button>
+    </div>
+  );
+};
+
 export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, minimizedWindows, onShutdown }) => {
   const [showStart, setShowStart] = useState(false);
   const [showMusic, setShowMusic] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, appId: string } | null>(null);
+  
   const { theme } = useTheme();
   const { isPlaying } = useMusic();
+  const { pinnedApps } = useSystem();
 
   const isTop = theme.taskbarPosition === 'top';
   
@@ -25,9 +84,14 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
   const isTerminalMinimized = minimizedWindows.includes('terminal');
   const isTerminalActive = isTerminalOpen && !isTerminalMinimized;
 
+  const handleContextMenu = (e: React.MouseEvent, appId: string) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, appId });
+  };
+
   return (
     <>
-    <div className={`h-12 win95-outset surface-grit flex items-center px-1 gap-2 relative z-[100] ${isTop ? 'order-first' : 'order-last'}`}>
+    <div className={`h-12 win95-outset surface-grit flex items-center px-1 gap-1 relative z-[100] ${isTop ? 'order-first' : 'order-last'}`}>
       
       {/* Start Button */}
       <button 
@@ -61,12 +125,39 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
             mask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
           }}
         />
-        {/* Open indicator — visible whenever the terminal is open (even if minimized) */}
         <div
           className="h-0.5 w-4 rounded-full transition-all duration-200"
           style={{ backgroundColor: isTerminalOpen ? theme.primary : 'transparent' }}
         />
       </button>
+
+      {/* Pinned Apps */}
+      {pinnedApps.map(appId => {
+        const meta = APP_METADATA[appId];
+        if (!meta) return null;
+        const Icon = meta.icon;
+        const isOpen = openWindows.includes(appId);
+        const isMinimized = minimizedWindows.includes(appId);
+        const isActive = isOpen && !isMinimized;
+        const color = theme[meta.colorKey];
+
+        return (
+          <button
+            key={appId}
+            id={appId === 'skniigachi' ? 'taskbar-skniigachi' : undefined}
+            onClick={() => onOpenWindow(appId)}
+            onContextMenu={(e) => handleContextMenu(e, appId)}
+            className={`h-9 px-3 win95-outset flex flex-col items-center justify-center gap-0.5 font-bold active:win95-inset transition-colors ${isActive ? 'win95-inset' : ''}`}
+            title={meta.label}
+          >
+            <Icon className={`w-5 h-5 transition-all ${isActive ? '' : 'opacity-60'}`} style={{ color }} />
+            <div
+              className="h-0.5 w-4 rounded-full transition-all duration-200"
+              style={{ backgroundColor: isOpen ? color : 'transparent' }}
+            />
+          </button>
+        );
+      })}
 
       {/* Center Spacer */}
       <div className="flex-1" />
@@ -93,7 +184,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
 
     </div>
 
-    {/* START MENU — fixed, z-99 so the taskbar (z-100) sits on top of it */}
+    {/* START MENU */}
     <AnimatePresence>
       {showStart && (
         <motion.div
@@ -114,27 +205,38 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
             <div className="flex-1 flex flex-col gap-1 p-1">
               <button
                 onClick={() => { onOpenWindow('theme'); setShowStart(false); }}
+                onContextMenu={(e) => handleContextMenu(e, 'theme')}
                 className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
               >
                 <Palette className="w-4 h-4" /> THEME_COLORS
               </button>
               <button
                 onClick={() => { onOpenWindow('shortcuts'); setShowStart(false); }}
+                onContextMenu={(e) => handleContextMenu(e, 'shortcuts')}
                 className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
               >
                 <ExternalLink className="w-4 h-4" /> SHORTCUTS
               </button>
               <button
                 onClick={() => { onOpenWindow('manual'); setShowStart(false); }}
+                onContextMenu={(e) => handleContextMenu(e, 'manual')}
                 className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
               >
                 <BookOpen className="w-4 h-4" /> MANUAL
               </button>
               <button
                 onClick={() => { onOpenWindow('settings'); setShowStart(false); }}
+                onContextMenu={(e) => handleContextMenu(e, 'settings')}
                 className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
               >
                 <Settings className="w-4 h-4" /> SETTINGS
+              </button>
+              <button
+                onClick={() => { onOpenWindow('skniigachi'); setShowStart(false); }}
+                onContextMenu={(e) => handleContextMenu(e, 'skniigachi')}
+                className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
+              >
+                <Monitor className="w-4 h-4" /> SKNIIGACHI.EXE
               </button>
               <div className="border-t border-gray-700 my-1" />
               <button
@@ -149,7 +251,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
       )}
     </AnimatePresence>
 
-    {/* MUSIC PLAYER — fixed, z-99 so the taskbar (z-100) sits on top of it */}
+    {/* MUSIC PLAYER */}
     <AnimatePresence>
       {showMusic && (
         <motion.div
@@ -178,6 +280,16 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* CONTEXT MENU */}
+    {contextMenu && (
+      <ContextMenu 
+        x={contextMenu.x} 
+        y={contextMenu.y} 
+        appId={contextMenu.appId} 
+        onClose={() => setContextMenu(null)} 
+      />
+    )}
     </>
   );
 };

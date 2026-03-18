@@ -8,8 +8,11 @@ import { ThemeWindow, SettingsWindow } from './components/ThemeSettings';
 import { Starfield } from './components/Starfield';
 import { WelcomeWindow } from './components/WelcomeWindow';
 import { SkniiTTY } from './components/SkniiTTY';
+import { Skniigachi } from './components/Skniigachi';
 import { MouseTrail } from './components/MouseTrail';
 import { BSOD } from './components/BSOD';
+import { SystemProvider, useSystem } from './context/SystemContext';
+import { WalkingPet } from './components/WalkingPet';
 import { Palette, Settings, Cpu, Monitor, ExternalLink, Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Edit2, Check, Image as ImageIcon, Layout, Box, Download, Upload, ListTree, BookOpen, Globe } from 'lucide-react';
 import { ManualWindow } from './components/ManualWindow';
 
@@ -24,6 +27,7 @@ const AVAILABLE_ICONS = [
   { label: 'UB', path: '/assets/icons/UB_square.svg', color: true },
   { label: 'Autolab', path: '/assets/icons/autolab.svg', color: true },
   { label: 'Piazza', path: '/assets/icons/piazza.svg', color: true },
+  { label: 'YouTube', path: '/assets/icons/youtube.svg', color: true },
   { label: 'Folder', path: '/assets/icons/folder.svg' },
   { label: 'Terminal', path: '/assets/icons/terminal.svg' },
   { label: 'Message', path: '/assets/icons/message.svg' },
@@ -757,11 +761,19 @@ const ShortcutsDashboard = ({ onOpenConfig }: { onOpenConfig: () => void }) => {
 const Desktop = () => {
   const { theme } = useTheme();
   const { groups, settings } = useUserLinks();
+  const { pet } = useSystem();
   const [openWindows, setOpenWindows] = useState<string[]>([]);
   const [minimizedWindows, setMinimizedWindows] = useState<string[]>([]);
   const [maximizedWindows, setMaximizedWindows] = useState<string[]>([]);
   const [windowStack, setWindowStack] = useState<string[]>([]);
   const [showBSOD, setShowBSOD] = useState(false);
+
+  // Close skniigachi window when walk starts
+  useEffect(() => {
+    if (pet.isWalking) {
+      closeWindow('skniigachi');
+    }
+  }, [pet.isWalking]);
 
   // Initial window state based on shortcuts
   useEffect(() => {
@@ -846,6 +858,7 @@ const Desktop = () => {
     <div className={`h-[100dvh] w-screen flex flex-col relative overflow-hidden select-none`}>
       <Starfield />
       <MouseTrail />
+      <WalkingPet />
       
       {showBSOD && <BSOD onRestart={restartSystem} />}
       
@@ -1078,6 +1091,27 @@ const Desktop = () => {
               </Window>
             </div>
           )}
+
+          {openWindows.includes('skniigachi') && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window 
+                title="Skniigachi.exe" 
+                icon={Monitor} 
+                onClose={() => closeWindow('skniigachi')}
+                onMinimize={() => minimizeWindow('skniigachi')}
+                onMaximize={() => maximizeWindow('skniigachi')}
+                onFocus={() => focusWindow('skniigachi')}
+                zIndex={getZIndex('skniigachi')}
+                isActive={windowStack[windowStack.length - 1] === 'skniigachi'}
+                isMinimized={minimizedWindows.includes('skniigachi')}
+                isMaximized={maximizedWindows.includes('skniigachi')}
+                defaultPosition={{ x: 0, y: 0 }}
+                className="max-w-xl w-[95vw]"
+              >
+                <Skniigachi />
+              </Window>
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -1086,13 +1120,15 @@ const Desktop = () => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <MusicProvider>
-        <UserLinksProvider>
-          <Desktop />
-        </UserLinksProvider>
-      </MusicProvider>
-    </ThemeProvider>
+    <SystemProvider>
+      <ThemeProvider>
+        <MusicProvider>
+          <UserLinksProvider>
+            <Desktop />
+          </UserLinksProvider>
+        </MusicProvider>
+      </ThemeProvider>
+    </SystemProvider>
   );
 }
 
