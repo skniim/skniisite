@@ -61,6 +61,27 @@ body {
   background: var(--color-win-dark);
 }
 
+/* Hybrid button: outset outer frame with inset content well */
+.win95-hybrid {
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-right: 2px solid rgba(0, 0, 0, 0.8);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.8);
+  background: var(--color-win-bg);
+  padding: 2px;
+}
+
+.win95-hybrid-inner {
+  border-left: 2px solid rgba(0, 0, 0, 0.8);
+  border-top: 2px solid rgba(0, 0, 0, 0.8);
+  border-right: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--color-win-dark);
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 /* CRT Effects */
 .crt-overlay {
   position: fixed;

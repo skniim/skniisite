@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { MusicProvider } from './context/MusicContext';
 import { UserLinksProvider, useUserLinks } from './context/UserLinksContext';
+import { WeatherProvider, useWeather } from './context/WeatherContext';
 import { Window } from './components/Window';
 import { Taskbar } from './components/Taskbar';
 import { ThemeWindow, SettingsWindow } from './components/ThemeSettings';
@@ -13,7 +14,8 @@ import { MouseTrail } from './components/MouseTrail';
 import { BSOD } from './components/BSOD';
 import { SystemProvider, useSystem } from './context/SystemContext';
 import { WalkingPet } from './components/WalkingPet';
-import { Palette, Settings, Cpu, Monitor, ExternalLink, Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Edit2, Check, Image as ImageIcon, Layout, Box, Download, Upload, ListTree, BookOpen, Globe } from 'lucide-react';
+import { WeatherWindow } from './components/WeatherWindow';
+import { Palette, Settings, Cpu, Monitor, ExternalLink, Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Edit2, Check, Image as ImageIcon, Layout, Box, Download, Upload, ListTree, BookOpen, Globe, CloudSun } from 'lucide-react';
 import { ManualWindow } from './components/ManualWindow';
 
 const AVAILABLE_ICONS = [
@@ -46,6 +48,7 @@ const isColorIcon = (path: string) => {
 const ShortcutConfigWindow = () => {
   const { theme } = useTheme();
   const { groups, settings, updateSettings, addGroup, removeGroup, updateGroup, addSubGroup, removeSubGroup, updateSubGroup, addLink, removeLink, reorderGroups, reorderLinks, reorderSubGroups, importConfig, clearConfig, fetchRemoteConfig } = useUserLinks();
+  const { location: weatherLocation, setLocation: setWeatherLocation } = useWeather();
   const [activeTab, setActiveTab] = useState<'shortcuts' | 'appearance' | 'data'>('shortcuts');
   
   // Sync state
@@ -201,7 +204,7 @@ const ShortcutConfigWindow = () => {
   };
 
   const handleExport = () => {
-    const data = JSON.stringify({ groups, settings }, null, 2);
+    const data = JSON.stringify({ groups, settings, weatherLocation }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -221,6 +224,9 @@ const ShortcutConfigWindow = () => {
         const config = JSON.parse(event.target?.result as string);
         if (config.groups && Array.isArray(config.groups)) {
           importConfig(config);
+          if (config.weatherLocation?.latitude && config.weatherLocation?.longitude) {
+            setWeatherLocation(config.weatherLocation);
+          }
           alert('Configuration imported successfully!');
         } else {
           alert('Invalid configuration file.');
@@ -1094,9 +1100,9 @@ const Desktop = () => {
 
           {openWindows.includes('skniigachi') && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <Window 
-                title="Skniigachi.exe" 
-                icon={Monitor} 
+              <Window
+                title="Skniigachi.exe"
+                icon={Monitor}
                 onClose={() => closeWindow('skniigachi')}
                 onMinimize={() => minimizeWindow('skniigachi')}
                 onMaximize={() => maximizeWindow('skniigachi')}
@@ -1112,6 +1118,27 @@ const Desktop = () => {
               </Window>
             </div>
           )}
+
+          {openWindows.includes('weather') && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Window
+                title="WEATHER.EXE"
+                icon={CloudSun}
+                onClose={() => closeWindow('weather')}
+                onMinimize={() => minimizeWindow('weather')}
+                onMaximize={() => maximizeWindow('weather')}
+                onFocus={() => focusWindow('weather')}
+                zIndex={getZIndex('weather')}
+                isActive={windowStack[windowStack.length - 1] === 'weather'}
+                isMinimized={minimizedWindows.includes('weather')}
+                isMaximized={maximizedWindows.includes('weather')}
+                defaultPosition={{ x: 0, y: 0 }}
+                className="max-w-lg w-[95vw]"
+              >
+                <WeatherWindow />
+              </Window>
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -1124,7 +1151,9 @@ function App() {
       <ThemeProvider>
         <MusicProvider>
           <UserLinksProvider>
-            <Desktop />
+            <WeatherProvider>
+              <Desktop />
+            </WeatherProvider>
           </UserLinksProvider>
         </MusicProvider>
       </ThemeProvider>

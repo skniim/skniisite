@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, Settings, Music, List, ExternalLink, BookOpen, Monitor, Cpu, Pin } from 'lucide-react';
+import { Palette, Settings, Music, List, ExternalLink, BookOpen, Monitor, Cpu, Pin, MapPin, RefreshCw } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useMusic } from '../context/MusicContext';
 import { useSystem } from '../context/SystemContext';
+import { useWeather, getWeatherIcon, toDisplayTemp } from '../context/WeatherContext';
 import { MusicPlayer } from './MusicPlayer';
 
 interface TaskbarProps {
@@ -77,9 +78,12 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
   const { theme } = useTheme();
   const { isPlaying } = useMusic();
   const { pinnedApps } = useSystem();
+  const { location, weather, isLoading, unit } = useWeather();
 
   const isTop = theme.taskbarPosition === 'top';
-  
+
+  const isWeatherOpen = openWindows.includes('weather') && !minimizedWindows.includes('weather');
+
   const isTerminalOpen = openWindows.includes('terminal');
   const isTerminalMinimized = minimizedWindows.includes('terminal');
   const isTerminalActive = isTerminalOpen && !isTerminalMinimized;
@@ -171,11 +175,38 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
         <Music className="w-5 h-5" />
       </button>
 
-      {/* OS Status */}
-      <div className="hidden sm:flex win95-inset h-9 px-3 items-center gap-2 text-xs font-bold relative z-10" style={{ color: theme.primary }}>
-        <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: theme.primary }} />
-        OS_ACTIVE
-      </div>
+      {/* Weather Button */}
+      {(() => {
+        let WeatherIcon: any = MapPin;
+        let tempStr = 'SET_LOC';
+        if (location && isLoading && !weather) {
+          WeatherIcon = RefreshCw;
+          tempStr = '---';
+        } else if (weather) {
+          WeatherIcon = getWeatherIcon(weather.weatherCode);
+          tempStr = toDisplayTemp(weather.temperature, unit);
+        }
+        return (
+          <button
+            onClick={() => onOpenWindow('weather')}
+            className={`hidden sm:flex h-9 items-center relative z-10 ${isWeatherOpen ? 'win95-inset px-3 gap-2' : 'win95-hybrid'}`}
+            style={{ color: theme.primary }}
+            title="Weather"
+          >
+            {isWeatherOpen ? (
+              <>
+                <WeatherIcon className="w-4 h-4" />
+                <span className="text-xs font-bold font-mono">{tempStr}</span>
+              </>
+            ) : (
+              <div className="win95-hybrid-inner px-3 gap-2">
+                <WeatherIcon className={`w-4 h-4 flex-shrink-0 ${location && isLoading && !weather ? 'animate-spin' : ''}`} />
+                <span className="text-xs font-bold font-mono">{tempStr}</span>
+              </div>
+            )}
+          </button>
+        );
+      })()}
 
       {/* Clock */}
       <div className="win95-inset h-9 px-3 flex items-center gap-3 text-xs font-bold relative z-10" style={{ color: theme.primary }}>
