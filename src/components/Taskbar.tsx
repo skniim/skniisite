@@ -14,13 +14,14 @@ interface TaskbarProps {
   onShutdown: () => void;
 }
 
-const APP_METADATA: Record<string, { label: string, icon: any, colorKey: 'primary' | 'secondary' | 'accent' }> = {
+const APP_METADATA: Record<string, { label: string, icon: any, colorKey: 'primary' | 'secondary' | 'accent', svgIcon?: string }> = {
   theme: { label: 'THEME_COLORS', icon: Palette, colorKey: 'primary' },
   shortcuts: { label: 'SHORTCUTS', icon: ExternalLink, colorKey: 'secondary' },
   manual: { label: 'MANUAL', icon: BookOpen, colorKey: 'accent' },
   settings: { label: 'SETTINGS', icon: Settings, colorKey: 'primary' },
   hardware: { label: 'HARDWARE', icon: Cpu, colorKey: 'secondary' },
   skniigachi: { label: 'SKNIIGACHI', icon: Monitor, colorKey: 'accent' },
+  terminal: { label: 'SKNIITTY', icon: Monitor, colorKey: 'primary', svgIcon: '/assets/icons/skniitty.svg' },
 };
 
 interface ContextMenuProps {
@@ -84,10 +85,6 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
 
   const isWeatherOpen = openWindows.includes('weather') && !minimizedWindows.includes('weather');
 
-  const isTerminalOpen = openWindows.includes('terminal');
-  const isTerminalMinimized = minimizedWindows.includes('terminal');
-  const isTerminalActive = isTerminalOpen && !isTerminalMinimized;
-
   const handleContextMenu = (e: React.MouseEvent, appId: string) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, appId });
@@ -113,28 +110,6 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
         <span style={{ color: theme.primary, opacity: showStart ? 1 : 0.6 }}>START</span>
       </button>
 
-      <div className="h-8 border-r border-gray-700 mx-1 relative z-10" />
-
-      {/* SkniiTTY Button */}
-      <button
-        onClick={() => onOpenWindow('terminal')}
-        className={`h-9 px-3 win95-outset flex flex-col items-center justify-center gap-0.5 font-bold active:win95-inset transition-colors ${isTerminalActive ? 'win95-inset' : ''}`}
-        title="SkniiTTY Terminal"
-      >
-        <div
-          className={`w-5 h-5 transition-all ${isTerminalActive ? '' : 'opacity-60'}`}
-          style={{
-            backgroundColor: theme.primary,
-            WebkitMask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
-            mask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
-          }}
-        />
-        <div
-          className="h-0.5 w-4 rounded-full transition-all duration-200"
-          style={{ backgroundColor: isTerminalOpen ? theme.primary : 'transparent' }}
-        />
-      </button>
-
       {/* Pinned Apps */}
       {pinnedApps.map(appId => {
         const meta = APP_METADATA[appId];
@@ -154,7 +129,18 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
             className={`h-9 px-3 win95-outset flex flex-col items-center justify-center gap-0.5 font-bold active:win95-inset transition-colors ${isActive ? 'win95-inset' : ''}`}
             title={meta.label}
           >
-            <Icon className={`w-5 h-5 transition-all ${isActive ? '' : 'opacity-60'}`} style={{ color }} />
+            {meta.svgIcon ? (
+              <div
+                className={`w-5 h-5 transition-all ${isActive ? '' : 'opacity-60'}`}
+                style={{
+                  backgroundColor: color,
+                  WebkitMask: `url(${meta.svgIcon}) no-repeat center / contain`,
+                  mask: `url(${meta.svgIcon}) no-repeat center / contain`,
+                }}
+              />
+            ) : (
+              <Icon className={`w-5 h-5 transition-all ${isActive ? '' : 'opacity-60'}`} style={{ color }} />
+            )}
             <div
               className="h-0.5 w-4 rounded-full transition-all duration-200"
               style={{ backgroundColor: isOpen ? color : 'transparent' }}
@@ -162,6 +148,38 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
           </button>
         );
       })}
+
+      {/* Minimized unpinned windows */}
+      {minimizedWindows
+        .filter(id => !pinnedApps.includes(id) && id !== 'weather' && APP_METADATA[id])
+        .map(id => {
+          const meta = APP_METADATA[id];
+          const Icon = meta.icon;
+          const color = theme[meta.colorKey];
+          return (
+            <button
+              key={id}
+              onClick={() => onOpenWindow(id)}
+              onContextMenu={(e) => handleContextMenu(e, id)}
+              className="h-9 px-3 win95-outset flex flex-col items-center justify-center gap-0.5 font-bold active:win95-inset transition-colors"
+              title={meta.label}
+            >
+              {meta.svgIcon ? (
+                <div
+                  className="w-5 h-5 opacity-60"
+                  style={{
+                    backgroundColor: color,
+                    WebkitMask: `url(${meta.svgIcon}) no-repeat center / contain`,
+                    mask: `url(${meta.svgIcon}) no-repeat center / contain`,
+                  }}
+                />
+              ) : (
+                <Icon className="w-5 h-5 opacity-60" style={{ color }} />
+              )}
+              <div className="h-0.5 w-4 rounded-full" style={{ backgroundColor: color }} />
+            </button>
+          );
+        })}
 
       {/* Center Spacer */}
       <div className="flex-1" />
@@ -189,7 +207,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
         return (
           <button
             onClick={() => onOpenWindow('weather')}
-            className={`hidden sm:flex h-9 items-center relative z-10 ${isWeatherOpen ? 'win95-inset px-3 gap-2' : 'win95-hybrid'}`}
+            className={`flex h-9 items-center relative z-10 ${isWeatherOpen ? 'win95-inset px-3 gap-2' : 'win95-hybrid'}`}
             style={{ color: theme.primary }}
             title="Weather"
           >
@@ -214,6 +232,11 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
       </div>
 
     </div>
+
+    {/* Overlay to close start menu on outside click */}
+    {showStart && (
+      <div className="fixed inset-0 z-[98]" onClick={() => setShowStart(false)} />
+    )}
 
     {/* START MENU */}
     <AnimatePresence>
@@ -247,6 +270,21 @@ export const Taskbar: React.FC<TaskbarProps> = ({ onOpenWindow, openWindows, min
                 className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
               >
                 <ExternalLink className="w-4 h-4" /> SHORTCUTS
+              </button>
+              <button
+                onClick={() => { onOpenWindow('terminal'); setShowStart(false); }}
+                onContextMenu={(e) => handleContextMenu(e, 'terminal')}
+                className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-2 font-bold text-xs"
+              >
+                <div
+                  className="w-4 h-4 flex-shrink-0"
+                  style={{
+                    backgroundColor: theme.primary,
+                    WebkitMask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
+                    mask: 'url(/assets/icons/skniitty.svg) no-repeat center / contain',
+                  }}
+                />
+                SKNIITTY.EXE
               </button>
               <button
                 onClick={() => { onOpenWindow('manual'); setShowStart(false); }}
